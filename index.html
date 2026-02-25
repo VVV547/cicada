@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>CICADA v4.5 </title>
+    <style>
+        body { background: #0a110a; color: #4af626; font-family: 'Courier New', monospace; display: flex; justify-content: center; padding: 20px; }
+        .terminal { border: 1px solid #4af626; padding: 20px; width: 100%; max-width: 800px; box-shadow: 0 0 20px rgba(0, 255, 0, 0.1); background: #000; }
+        input, textarea, select { width: 100%; background: #050505; color: #4af626; border: 1px solid #2d5a27; padding: 12px; margin: 10px 0; box-sizing: border-box; font-size: 1.1em; }
+        .key-input { border-color: #f6d326; color: #f6d326; font-weight: bold; text-align: center; letter-spacing: 3px; }
+        button { background: #1a331a; color: #4af626; border: 1px solid #4af626; padding: 10px 15px; cursor: pointer; transition: 0.3s; font-family: inherit; width: 100%; margin: 5px 0; }
+        button:hover { background: #4af626; color: #000; }
+        h2 { text-align: center; border-bottom: 1px solid #4af626; padding-bottom: 10px; margin-top: 0; }
+        label { font-size: 0.8em; text-transform: uppercase; color: #888; display: block; margin-top: 10px; }
+        #timer { color: #ff3e3e; font-weight: bold; text-align: right; height: 20px; font-size: 0.9em; }
+        .file-input-wrapper { border: 1px dashed #4af626; padding: 10px; text-align: center; margin: 10px 0; cursor: pointer; }
+        .file-input-wrapper:hover { background: #1a331a; }
+        .download-zone { border: 1px dashed #3b82f6; padding: 10px; margin-top: 10px; display: none; text-align: center; color: #3b82f6; }
+    </style>
+</head>
+<body>
+    <div class="terminal">
+        <h2>TERMINAL: CICADA v4.5</h2>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div>
+                <label>КЛЮЧ ДОСТУПА:</label>
+                <input type="text" id="passkey" class="key-input" maxlength="10" value="1234567890">
+            </div>
+            <div>
+                <label>ПЛОТНОСТЬ:</label>
+                <select id="ratio" onchange="process()">
+                    <option value="1">1:1</option>
+                    <option value="2">1:2</option>
+                    <option value="3">1:3</option>
+                </select>
+            </div>
+        </div>
+
+        <button onclick="genKey()">СГЕНЕРИРОВАТЬ НОВЫЙ КЛЮЧ</button>
+
+        <label>ВАШЕ СООБЩЕНИЕ:</label>
+        <textarea id="rawInput" rows="2" placeholder="Текст..."></textarea>
+
+        <label>ВЫХОД (ШИФР / АУДИО):</label>
+        <textarea id="cipherOutput" rows="2" readonly></textarea>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <button onclick="transmitAudio(false)" style="border-color: #f6d326; color: #f6d326;">🔊 ТРАНСЛЯЦИЯ</button>
+            <button onclick="transmitAudio(true)" style="border-color: #3b82f6; color: #3b82f6;">💾 ЗАПИСАТЬ ФАЙЛ</button>
+        </div>
+
+        <div id="downloadZone" class="download-zone">
+            ФАЙЛ ГОТОВ: <a id="downloadLink" style="color: #fff; text-decoration: underline;" download="cipher.webm">СКАЧАТЬ AUDIO</a>
+        </div>
+
+        <hr style="border: 0.5px solid #2d5a27; margin: 20px 0;">
+
+        <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+            <label>ВХОД (ШИФР / ЗАГРУЗКА):</label>
+            <div id="timer"></div>
+        </div>
+        <textarea id="cipherInput" rows="2" placeholder="Вставьте код или загрузите файл..."></textarea>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <button onclick="listenAudio()" id="listenBtn" style="border-color: #ff3e3e; color: #ff3e3e;">🎙 ЭФИР</button>
+            <label class="file-input-wrapper">
+                📁 ЗАГРУЗИТЬ ЗВУК
+                <input type="file" id="audioUpload" accept="audio/*" style="display:none;" onchange="decodeFile(this)">
+            </label>
+        </div>
+        
+        <label>РЕЗУЛЬТАТ ДЕШИФРОВКИ:</label>
+        <textarea id="rawOutput" rows="2" readonly style="color: #fff;"></textarea>
+    </div>
+
+<script>
+    const abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя0123456789 .,!?-";
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let countdown;
+
+    function genKey() {
+        let newKey = "";
+        for(let i=0; i<10; i++) newKey += Math.floor(Math.random() * 10);
+        document.getElementById('passkey').value = newKey;
+        process();
+    }
+
+    function generateTable(seed, ratio) {
+        let chars = abc.split('');
+        let s = parseInt(seed) || 0;
+        const random = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+        let pool = [...chars];
+        for (let i = pool.length - 1; i > 0; i--) {
+            const j = Math.floor(random() * (i + 1));
+            [pool[i], pool[j]] = [pool[j], pool[i]];
+        }
+        let table = {}, revTable = {};
+        chars.forEach((char, i) => {
+            let replacement = "";
+            for(let r=0; r<ratio; r++) {
+                let idx = (i + r * 17) % pool.length; 
+                replacement += pool[idx];
+            }
+            table[char] = replacement;
+            revTable[replacement] = char;
+        });
+        return { table, revTable, ratio };
+    }
+
+    function process() {
+        const seed = document.getElementById('passkey').value;
+        const ratio = parseInt(document.getElementById('ratio').value);
+        const { table, revTable } = generateTable(seed, ratio);
+        const text = document.getElementById('rawInput').value;
+        document.getElementById('cipherOutput').value = text.split('').map(c => table[c] || c).join('');
+        const crypt = document.getElementById('cipherInput').value;
+        let decoded = "";
+        if (ratio === 1) { decoded = crypt.split('').map(c => revTable[c] || c).join(''); }
+        else {
+            for (let i = 0; i < crypt.length; i += ratio) {
+                let chunk = crypt.substr(i, ratio);
+                decoded += revTable[chunk] || (chunk.length === ratio ? "?" : chunk);
+            }
+        }
+        document.getElementById('rawOutput').value = decoded;
+        if (crypt.length > 0) startTimer(); else stopTimer();
+    }
+
+    function transmitAudio(isRecording) {
+        const text = document.getElementById('cipherOutput').value;
+        if (!text) return;
+        const dest = audioCtx.createMediaStreamDestination();
+        let recorder; let chunks = [];
+        if (isRecording) {
+            recorder = new MediaRecorder(dest.stream);
+            recorder.ondataavailable = e => chunks.push(e.data);
+            recorder.onstop = () => {
+                const blob = new Blob(chunks, { type: 'audio/webm' });
+                document.getElementById('downloadLink').href = URL.createObjectURL(blob);
+                document.getElementById('downloadZone').style.display = 'block';
+            };
+            recorder.start();
+        }
+        let time = audioCtx.currentTime + 0.1;
+        text.split('').forEach(char => {
+            const index = abc.indexOf(char);
+            if (index === -1) return;
+            const freq = 600 + (index * 15);
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.1, time);
+            gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.12);
+            osc.connect(gain); gain.connect(audioCtx.destination); gain.connect(dest);
+            osc.start(time); osc.stop(time + 0.12);
+            time += 0.15;
+        });
+        if (isRecording) setTimeout(() => recorder.stop(), (time - audioCtx.currentTime) * 1000);
+    }
+
+    // ДЕКОДИРОВАНИЕ ИЗ ФАЙЛА
+        // Улучшенное декодирование из файла v4.6
+    async function decodeFile(input) {
+        const file = input.files[0];
+        if (!file) return;
+        
+        document.getElementById('cipherInput').value = "АНАЛИЗ ФАЙЛА...";
+        const arrayBuffer = await file.arrayBuffer();
+        const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+        const data = audioBuffer.getChannelData(0);
+        const sampleRate = audioBuffer.sampleRate;
+        
+        let result = "";
+        const step = Math.floor(sampleRate * 0.15); // Совпадает с длительностью передачи (0.12 + 0.03)
+        const fftSize = 4096; // Повышаем точность анализа
+
+        for (let i = 0; i < data.length - fftSize; i += step) {
+            const chunk = data.slice(i, i + fftSize);
+            const freq = getPeakFrequency(chunk, sampleRate);
+            
+            if (freq > 580) {
+                const charIdx = Math.round((freq - 600) / 15);
+                if (charIdx >= 0 && charIdx < abc.length) {
+                    const char = abc[charIdx];
+                    // Защита от дублей, если символ "растянулся"
+                    if (result.slice(-1) !== char) result += char;
+                }
+            }
+        }
+        
+        document.getElementById('cipherInput').value = result;
+        process();
+    }
+
+    // Функция точного поиска доминирующей частоты
+    function getPeakFrequency(data, sampleRate) {
+        const fftSize = data.length;
+        const real = new Float32Array(fftSize);
+        const imag = new Float32Array(fftSize);
+        
+        // Быстрое приближение (поиск пересечений нуля или магнитуды)
+        // Для точности в файлах используем упрощенный спектральный анализ
+        let maxAmp = 0;
+        let bestFreq = 0;
+
+        for (let f = 600; f < 3000; f += 7.5) { // Шаг в половину минимальной дистанции (15/2)
+            let r = 0, q = 0;
+            for (let n = 0; n < fftSize; n++) {
+                const angle = (2 * Math.PI * f * n) / sampleRate;
+                r += data[n] * Math.cos(angle);
+                q += data[n] * Math.sin(angle);
+            }
+            const amp = r * r + q * q;
+            if (amp > maxAmp) {
+                maxAmp = amp;
+                bestFreq = f;
+            }
+        }
+        return maxAmp > 0.01 ? bestFreq : 0; // Порог чувствительности
+    }
+
+
+    function detectFreq(buffer, sampleRate) {
+        let maxVal = -Infinity; let maxIdx = -1;
+        const fftSize = 2048;
+        // Упрощенный поиск пика для файла
+        const spectrum = new Float32Array(fftSize/2);
+        for(let i=0; i<fftSize; i++) spectrum[i] = buffer[i] || 0; 
+        // Здесь используется упрощенная логика детекции частоты
+        let bestFreq = 0; let bestAmp = 0;
+        for (let f = 600; f < 3000; f += 5) {
+            let amp = 0;
+            for (let i = 0; i < 200; i++) amp += Math.abs(buffer[i] * Math.sin(2 * Math.PI * f * i / sampleRate));
+            if (amp > bestAmp) { bestAmp = amp; bestFreq = f; }
+        }
+        return bestAmp > 0.5 ? bestFreq : 0;
+    }
+
+    let isListening = false;
+    function listenAudio() {
+        if (isListening) { location.reload(); return; }
+        isListening = true;
+        document.getElementById('listenBtn').innerText = "⏹ СТОП";
+        navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+            const source = audioCtx.createMediaStreamSource(stream);
+            const analyser = audioCtx.createAnalyser();
+            analyser.fftSize = 2048; source.connect(analyser);
+            const buffer = new Float32Array(analyser.frequencyBinCount);
+            function detect() {
+                analyser.getFloatFrequencyData(buffer);
+                let maxVal = -Infinity; let maxIdx = -1;
+                for (let i = 0; i < buffer.length; i++) { if (buffer[i] > maxVal) { maxVal = buffer[i]; maxIdx = i; } }
+                const freq = maxIdx * audioCtx.sampleRate / analyser.fftSize;
+                if (maxVal > -45 && freq > 580) {
+                    const charIdx = Math.round((freq - 600) / 15);
+                    if (charIdx >= 0 && charIdx < abc.length) {
+                        const char = abc[charIdx];
+                        const input = document.getElementById('cipherInput');
+                        if (input.value.slice(-1) !== char) { input.value += char; process(); }
+                    }
+                }
+                if (isListening) requestAnimationFrame(detect);
+            }
+            detect();
+        });
+    }
+
+    function startTimer() {
+        const timerDisplay = document.getElementById('timer');
+        let timeLeft = 30; clearInterval(countdown);
+        countdown = setInterval(() => {
+            timeLeft--; timerDisplay.innerText = `САМОУНИЧТОЖЕНИЕ: ${timeLeft}s`;
+            if (timeLeft <= 0) { clearInterval(countdown); document.getElementById('rawOutput').value = "ДАННЫЕ СТЕРТЫ"; }
+        }, 1000);
+    }
+    function stopTimer() { clearInterval(countdown); document.getElementById('timer').innerText = ""; }
+
+    document.getElementById('passkey').oninput = process;
+    document.getElementById('rawInput').oninput = process;
+    document.getElementById('cipherInput').oninput = process;
+</script>
+</body>
+</html>
