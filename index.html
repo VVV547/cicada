@@ -277,10 +277,11 @@
     }
 
     function transmitAudio(isRecording) {
-        const text = document.getElementById('cipherOutput').value;
+        const text = document.getElementById('cipherOutput').value + " "; // ДОБАВИЛИ ПРОБЕЛ В КОНЕЦ
         if (!text) return;
         const dest = audioCtx.createMediaStreamDestination();
         let recorder; let chunks = [];
+        
         if (isRecording) {
             recorder = new MediaRecorder(dest.stream);
             recorder.ondataavailable = e => chunks.push(e.data);
@@ -291,7 +292,11 @@
             };
             recorder.start();
         }
-        let time = audioCtx.currentTime + 0.1;
+        
+        let time = audioCtx.currentTime + 0.3; 
+        const duration = 0.12; 
+        const step = 0.18; // УВЕЛИЧИЛИ ИНТЕРВАЛ МЕЖДУ СИМВОЛАМИ ДЛЯ НАДЕЖНОСТИ
+
         text.split('').forEach(char => {
             const index = abc.indexOf(char);
             if (index === -1) return;
@@ -300,13 +305,20 @@
             const gain = audioCtx.createGain();
             osc.frequency.value = freq;
             gain.gain.setValueAtTime(0.1, time);
-            gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.12);
+            gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
             osc.connect(gain); gain.connect(audioCtx.destination); gain.connect(dest);
-            osc.start(time); osc.stop(time + 0.12);
-            time += 0.15;
+            osc.start(time); osc.stop(time + duration);
+            time += step;
         });
-        if (isRecording) setTimeout(() => recorder.stop(), (time - audioCtx.currentTime) * 1000);
+
+        // УВЕЛИЧИЛИ ЗАПАС ЗАПИСИ ДО 1 СЕКУНДЫ
+        if (isRecording) {
+            setTimeout(() => recorder.stop(), (time - audioCtx.currentTime + 1.0) * 1000+1000);
+        }
     }
+
+
+
 
     // ДЕКОДИРОВАНИЕ ИЗ ФАЙЛА
         // Улучшенное декодирование из файла v4.6
@@ -314,28 +326,48 @@
         const file = input.files[0];
         if (!file) return;
         
-        document.getElementById('cipherInput').value = "АНАЛИЗ ФАЙЛА...";
+        document.getElementById('cipherInput').value = "УСИЛЕНИЕ СИГНАЛА...";
         const arrayBuffer = await file.arrayBuffer();
-        const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+        const audioCtxTemp = new (window.AudioContext || window.webkitAudioContext)();
+        const audioBuffer = await audioCtxTemp.decodeAudioData(arrayBuffer);
         const data = audioBuffer.getChannelData(0);
         const sampleRate = audioBuffer.sampleRate;
         
         let result = "";
-        const step = Math.floor(sampleRate * 0.15); // Совпадает с длительностью передачи (0.12 + 0.03)
-        const fftSize = 4096; // Повышаем точность анализа
+        let lastFoundChar = "";
+        let silentStreak = 0;
 
-        for (let i = 0; i < data.length - fftSize; i += step) {
-            const chunk = data.slice(i, i + fftSize);
-            const freq = getPeakFrequency(chunk, sampleRate);
+        // СКАНИРУЕМ ОЧЕНЬ ПЛОТНО (каждые 20мс)
+        const scanStep = Math.floor(sampleRate * 0.02); 
+        const windowSize = 2048;
+
+        for (let i = 0; i < data.length - windowSize; i += scanStep) {
+            const chunk = data.slice(i, i + windowSize);
             
-            if (freq > 580) {
-                const charIdx = Math.round((freq - 600) / 15);
-                if (charIdx >= 0 && charIdx < abc.length) {
-                    const char = abc[charIdx];
-                    // Защита от дублей, если символ "растянулся"
-                    if (result.slice(-1) !== char) result += char;
+            // ПРОГРАММНОЕ УСИЛЕНИЕ (Нормализация)
+            let maxAmp = 0;
+            for(let s=0; s<chunk.length; s++) if(Math.abs(chunk[s]) > maxAmp) maxAmp = Math.abs(chunk[s]);
+            
+            // Если сигнал есть, даже очень слабый (0.005)
+            if (maxAmp > 0.005) { 
+                const freq = getPeakFrequency(chunk, sampleRate);
+                if (freq > 580) {
+                    const charIdx = Math.round((freq - 600) / 15);
+                    if (charIdx >= 0 && charIdx < abc.length) {
+                        const char = abc[charIdx];
+                        if (char !== lastFoundChar) {
+                            result += char;
+                            lastFoundChar = char;
+                            i += Math.floor(sampleRate * 0.1); // Пропуск тела символа
+                        }
+                        silentStreak = 0;
+                        continue;
+                    }
                 }
             }
+            
+            silentStreak++;
+            if (silentStreak > 3) lastFoundChar = ""; // Сброс для повторяющихся букв
         }
         
         document.getElementById('cipherInput').value = result;
@@ -344,18 +376,13 @@
 
     // Функция точного поиска доминирующей частоты
     function getPeakFrequency(data, sampleRate) {
-        const fftSize = data.length;
-        const real = new Float32Array(fftSize);
-        const imag = new Float32Array(fftSize);
-        
-        // Быстрое приближение (поиск пересечений нуля или магнитуды)
-        // Для точности в файлах используем упрощенный спектральный анализ
         let maxAmp = 0;
         let bestFreq = 0;
 
-        for (let f = 600; f < 3000; f += 7.5) { // Шаг в половину минимальной дистанции (15/2)
+        // Ищем только в нашем диапазоне частот CICADA
+        for (let f = 590; f < 3000; f += 5) {
             let r = 0, q = 0;
-            for (let n = 0; n < fftSize; n++) {
+            for (let n = 0; n < data.length; n++) {
                 const angle = (2 * Math.PI * f * n) / sampleRate;
                 r += data[n] * Math.cos(angle);
                 q += data[n] * Math.sin(angle);
@@ -366,9 +393,8 @@
                 bestFreq = f;
             }
         }
-        return maxAmp > 0.01 ? bestFreq : 0; // Порог чувствительности
+        return bestFreq;
     }
-
 
     function detectFreq(buffer, sampleRate) {
         let maxVal = -Infinity; let maxIdx = -1;
