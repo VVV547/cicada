@@ -1,459 +1,409 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <title>CICADA v4.5 </title>
-    <style>
-        body { 
-            background: #0a110a; 
-            color: #4af626; 
-            font-family: 'Courier New', monospace; 
-            display: flex; 
-            justify-content: center; 
-            padding: 20px; 
-            overflow-x: hidden;
-        }
-        
-        .terminal { 
-            border: 1px solid #4af626; 
-            padding: 20px; 
-            width: 100%; 
-            max-width: 800px; 
-            box-shadow: 0 0 20px rgba(0, 255, 0, 0.1); 
-            background: #000; 
-            position: relative;
-        }
+<meta charset="UTF-8">
+<title>ENIGMA_WALL | BASTION v23.5 ULTRA-STABLE</title>
+<style>
+:root { 
+    --bg: #020202; --s: #0a0a0a; --b: #1a1a1a; --t: #e0e0e0; 
+    --a: #ff9d00; --d: #ff3333; --g: #00ff66; --bl: #0088ff;
+    --f: 'JetBrains Mono', 'Consolas', monospace; 
+}
+* { box-sizing: border-box; transition: 0.1s; border-radius: 0 !important; outline: none; }
+body, html { margin: 0; padding: 0; background: var(--bg); color: var(--t); font-family: var(--f); height: 100vh; overflow: hidden; }
 
-        /* ЭФФЕКТ ГЛИТЧА ДЛЯ ЗАГОЛОВКА */
-        h2 { 
-            text-align: center; 
-            border-bottom: 1px solid #4af626; 
-            padding-bottom: 10px; 
-            margin-top: 0; 
-            position: relative;
-            cursor: default;
-        }
+/* Grid Setup */
+.m-grid { display: grid; grid-template-columns: 400px 1fr 400px; grid-template-rows: 65px 1fr 220px; height: 100vh; gap: 1px; background: var(--b); }
 
-        h2:hover {
-            animation: glitch-skew 1s infinite linear alternate-reverse;
-        }
+/* UI Modules */
+.nav { grid-column: 1 / 4; background: var(--s); display: flex; align-items: center; justify-content: space-between; padding: 0 30px; border-bottom: 2px solid var(--a); z-index: 10; }
+.logo { font-weight: 900; font-size: 22px; letter-spacing: 8px; color: var(--a); text-shadow: 0 0 10px rgba(255,157,0,0.3); }
+.l-btn { background: transparent; border: 1px solid var(--a); color: var(--a); padding: 8px 18px; cursor: pointer; font-size: 10px; font-weight: 900; letter-spacing: 2px; }
+.l-btn:hover { background: var(--a); color: #000; box-shadow: 0 0 15px var(--a); }
 
-        h2::before, h2::after {
-            content: "TERMINAL: CICADA v4.5";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: black;
-            display: none;
-        }
+.w { background: var(--bg); display: flex; flex-direction: column; overflow: hidden; position: relative; }
+.w-h { padding: 15px 25px; background: var(--s); font-size: 11px; font-weight: 900; letter-spacing: 3px; color: var(--a); border-bottom: 1px solid var(--b); display: flex; justify-content: space-between; align-items: center; }
+.v-v { flex: 1; background: #000; position: relative; overflow: hidden; border-bottom: 1px solid var(--b); }
+#sC { width: 100%; height: 100%; }
 
-        h2:hover::before {
-            display: block;
-            left: 2px;
-            text-shadow: -2px 0 #ff00c1;
-            clip: rect(44px, 450px, 56px, 0);
-            animation: glitch-anim 5s infinite linear alternate-reverse;
-        }
+.u-p { padding: 20px; flex: 1; overflow-y: auto; scrollbar-width: thin; }
+label { display: block; font-size: 9px; color: #666; margin-bottom: 10px; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; }
+input, textarea, select { width: 100%; background: #050505; border: 1px solid var(--b); color: var(--a); padding: 14px; font-family: inherit; font-size: 13px; margin-bottom: 18px; resize: none; border-left: 2px solid var(--b); }
+input:focus, textarea:focus { border-left-color: var(--a); background: #080808; }
+.k-f { text-align: center; font-weight: bold; letter-spacing: 4px; border: 1px double var(--a); font-size: 18px; color: #fff; background: #000; }
 
-        h2:hover::after {
-            display: block;
-            left: -2px;
-            text-shadow: -2px 0 #00fff9, 2px 2px #ff00c1;
-            animation: glitch-anim2 1s infinite linear alternate-reverse;
-        }
+.b-s { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+button:not(.l-btn) { background: #0d0d0d; border: 1px solid var(--b); color: var(--t); padding: 16px; cursor: pointer; text-transform: uppercase; font-size: 10px; font-weight: 900; letter-spacing: 1px; }
+button:not(.l-btn):hover { background: #1a1a1a; border-color: var(--a); color: var(--a); }
+.b-a { border-color: var(--a) !important; color: var(--a) !important; box-shadow: inset 0 0 10px rgba(255,157,0,0.1); }
+.b-e { border-color: var(--d) !important; color: var(--d) !important; }
 
-        /* ИНТЕРФЕЙС */
-        input, textarea, select { 
-            width: 100%; 
-            background: #050505; 
-            color: #4af626; 
-            border: 1px solid #2d5a27; 
-            padding: 12px; 
-            margin: 10px 0; 
-            box-sizing: border-box; 
-            font-size: 1.1em; 
-            outline: none;
-        }
+.sc-b { height: 150px; background: #000; border-top: 1px solid var(--b); position: relative; }
+#sc { width: 100%; height: 100%; }
+.ind { position: absolute; bottom: 10px; left: 20px; font-size: 9px; color: var(--a); display: flex; gap: 15px; background: rgba(0,0,0,0.7); padding: 5px; }
 
-        .key-input { 
-            border-color: #f6d326; 
-            color: #f6d326; 
-            font-weight: bold; 
-            text-align: center; 
-            letter-spacing: 3px; 
-        }
+/* Console & Logs */
+.c-l { grid-column: 1 / 4; padding: 15px 30px; font-size: 11px; color: #444; overflow-y: scroll; border-top: 2px solid var(--b); background: #010101; }
+.l-r { margin-bottom: 6px; border-left: 2px solid #222; padding-left: 15px; display: flex; align-items: baseline; }
+.l-t { color: #666; font-size: 9px; min-width: 80px; font-weight: bold; }
+.l-m { color: var(--t); }
+.sys { color: var(--a); font-weight: 900; }
 
-        button { 
-            background: #1a331a; 
-            color: #4af626; 
-            border: 1px solid #4af626; 
-            padding: 10px 15px; 
-            cursor: pointer; 
-            transition: 0.3s; 
-            font-family: inherit; 
-            width: 100%; 
-            margin: 5px 0; 
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
+/* Animations */
+@keyframes pulse { 0% { opacity: 0.3; } 50% { opacity: 1; } 100% { opacity: 0.3; } }
+.rec-active { color: var(--d); animation: pulse 1s infinite; }
 
-        button:hover { 
-            background: #4af626; 
-            color: #000; 
-            box-shadow: 0 0 10px #4af626;
-        }
-
-        label { 
-            font-size: 0.8em; 
-            text-transform: uppercase; 
-            color: #888; 
-            display: block; 
-            margin-top: 10px; 
-        }
-
-        #timer { 
-            color: #ff3e3e; 
-            font-weight: bold; 
-            text-align: right; 
-            height: 20px; 
-            font-size: 0.9em; 
-        }
-
-        .download-zone { 
-            border: 1px dashed #3b82f6; 
-            padding: 10px; 
-            margin-top: 10px; 
-            display: none; 
-            text-align: center; 
-            color: #3b82f6; 
-        }
-
-        .file-input-wrapper { 
-            border: 1px dashed #4af626; 
-            padding: 10px; 
-            text-align: center; 
-            margin: 10px 0; 
-            cursor: pointer; 
-            display: block;
-        }
-
-        /* АНИМАЦИИ ГЛИТЧА */
-        @keyframes glitch-anim {
-            0% { clip: rect(10px, 9999px, 20px, 0); }
-            20% { clip: rect(40px, 9999px, 50px, 0); }
-            40% { clip: rect(70px, 9999px, 80px, 0); }
-            60% { clip: rect(20px, 9999px, 30px, 0); }
-            80% { clip: rect(90px, 9999px, 100px, 0); }
-            100% { clip: rect(50px, 9999px, 60px, 0); }
-        }
-
-        @keyframes glitch-anim2 {
-            0% { clip: rect(65px, 9999px, 100px, 0); }
-            20% { clip: rect(4px, 9999px, 20px, 0); }
-            40% { clip: rect(90px, 9999px, 15px, 0); }
-            60% { clip: rect(30px, 9999px, 50px, 0); }
-            80% { clip: rect(10px, 9999px, 80px, 0); }
-            100% { clip: rect(55px, 9999px, 5px, 0); }
-        }
-
-        @keyframes glitch-skew {
-            0% { transform: skew(4deg); }
-            10% { transform: skew(-2deg); }
-            20% { transform: skew(5deg); }
-            30% { transform: skew(0deg); }
-            100% { transform: skew(0deg); }
-        }
-    </style>
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-thumb { background: var(--a); }
+</style>
 </head>
 <body>
-    <div class="terminal">
-        <h2>TERMINAL: CICADA v4.5</h2>
-        
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-            <div>
-                <label>КЛЮЧ ДОСТУПА:</label>
-                <input type="text" id="passkey" class="key-input" maxlength="10" value="0013001700">
+
+<div class="m-grid">
+    <header class="nav">
+        <div class="logo">ENIGMA_WALL | BASTION v23.5</div>
+        <div style="display:flex; align-items:center; gap:40px;">
+            <button class="l-btn" onclick="sys.toggleLang()">LANG_SWITCH</button>
+            <div id="clk" style="font-size: 14px; color: #333; font-weight: 900;">00:00:00</div>
+        </div>
+    </header>
+
+    <!-- LEFT: SECURITY SEED -->
+    <section class="w">
+        <div class="w-h"><span data-l="m1">ГЕОМЕТРИЯ_КЛЮЧА</span> <span id="v-stat" style="color:var(--g)">[STABLE]</span></div>
+        <div class="v-v"><canvas id="sC"></canvas></div>
+        <div class="u-p">
+            <label data-l="lk">КЛЮЧ (SEED):</label>
+            <input type="text" id="k" class="k-f" value="B-99-ULTRA-CORE" oninput="crypto.reinit()">
+            <div class="b-s">
+                <button onclick="sys.newKey()" data-l="bg">ГЕНЕРАЦИЯ</button>
+                <button onclick="sys.saveImg()" data-l="be">ЭКСПОРТ</button>
             </div>
-            <div>
-                <label>ПЛОТНОСТЬ:</label>
-                <select id="ratio" onchange="process()">
-                    <option value="1">1:1</option>
-                    <option value="2">1:2</option>
-                    <option value="3">1:3</option>
-                </select>
+            <label style="margin-top:20px;" data-l="lr">ИНТЕНСИВНОСТЬ:</label>
+            <select id="diff" onchange="crypto.reinit()">
+                <option value="1">1:1 LIGHT (Fast)</option>
+                <option value="2" selected>1:2 MEDIUM (Balanced)</option>
+                <option value="3">1:3 HARD (Secure)</option>
+                <option value="4">1:4 OVERKILL</option>
+            </select>
+        </div>
+    </section>
+
+    <!-- CENTER: TRANSMISSION -->
+    <section class="w" style="border-left: 1px solid var(--b); border-right: 1px solid var(--b);">
+        <div class="w-h"><span data-l="m2">ТРАНСЛЯЦИЯ</span> <span id="tx-stat">IDLE</span></div>
+        <div class="u-p">
+            <label data-l="li">ВВОД (RAW_DATA):</label>
+            <textarea id="rawIn" rows="11" placeholder="..." oninput="crypto.sync()"></textarea>
+            <label data-l="lo">ШИФР (CIPHERTEXT):</label>
+            <textarea id="cipOut" rows="11" readonly></textarea>
+            <div class="b-s">
+                <button class="b-a" onclick="modem.tx(false)" data-l="bt">В ЭФИР</button>
+                <button onclick="modem.tx(true)" data-l="bs">В ФАЙЛ</button>
+            </div>
+            <div id="dl" style="display:none; margin-top:15px; text-align:center;">
+                <a id="dlL" style="color:var(--bl); font-size:10px; text-decoration:none; border:1px solid; padding:5px;" download="pkt_bastion.webm">>> ПОЛУЧИТЬ ПАКЕТ (WEBM)</a>
             </div>
         </div>
-
-        <button onclick="genKey()">СГЕНЕРИРОВАТЬ НОВЫЙ КЛЮЧ</button>
-
-        <label>ВАШЕ СООБЩЕНИЕ:</label>
-        <textarea id="rawInput" rows="2" placeholder="Текст..."></textarea>
-
-        <label>ВЫХОД (ШИФР / АУДИО):</label>
-        <textarea id="cipherOutput" rows="2" readonly></textarea>
-        
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <button onclick="transmitAudio(false)" style="border-color: #f6d326; color: #f6d326;">🔊 ТРАНСЛЯЦИЯ</button>
-            <button onclick="transmitAudio(true)" style="border-color: #3b82f6; color: #3b82f6;">💾 ЗАПИСАТЬ ФАЙЛ</button>
+        <div class="sc-b">
+            <canvas id="sc"></canvas>
+            <div class="ind">
+                <span>VOL: <b id="i-v">-∞</b></span>
+                <span>FREQ: <b id="i-f">0</b></span>
+                <span>THR: <b id="i-t">-50dB</b></span>
+            </div>
         </div>
+    </section>
 
-        <div id="downloadZone" class="download-zone">
-            ФАЙЛ ГОТОВ: <a id="downloadLink" style="color: #fff; text-decoration: underline;" download="cipher.webm">СКАЧАТЬ AUDIO</a>
+    <!-- RIGHT: ANALYSIS -->
+    <section class="w">
+        <div class="w-h"><span data-l="m3">АНАЛИЗ_ЭФИРА</span> <span id="rx-stat">OFFLINE</span></div>
+        <div class="u-p">
+            <label data-l="lc">ПРИЕМ (RAW_RX):</label>
+            <textarea id="cipIn" rows="13" placeholder="..." oninput="crypto.sync()"></textarea>
+            <div class="b-s">
+                <button id="listenBtn" class="b-e" onclick="modem.toggleRx()" data-l="bm">СЛУШАТЬ</button>
+                <button onclick="document.getElementById('f').click()" data-l="bf">ОТКРЫТЬ</button>
+            </div>
+            <input type="file" id="f" hidden onchange="modem.decodeFile(this)">
+            
+            <label style="margin-top:30px;" data-l="ls">РЕЗУЛЬТАТ (DECODED):</label>
+            <textarea id="rawOut" rows="13" readonly style="border-color:var(--g); color:#00ff00; background:#020502;"></textarea>
+            <button onclick="sys.copy()" style="width:100%; margin-top:10px; border-color:var(--g); color:var(--g);" data-l="bc">COPY_TO_CLIPBOARD</button>
         </div>
+    </section>
 
-        <hr style="border: 0.5px solid #2d5a27; margin: 20px 0;">
-
-        <div style="display: flex; justify-content: space-between; align-items: flex-end;">
-            <label>ВХОД (ШИФР / ЗАГРУЗКА):</label>
-            <div id="timer"></div>
-        </div>
-        <textarea id="cipherInput" rows="2" placeholder="Вставьте код или загрузите файл..."></textarea>
-        
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <button onclick="listenAudio()" id="listenBtn" style="border-color: #ff3e3e; color: #ff3e3e;">🎙 ЭФИР</button>
-            <label class="file-input-wrapper">
-                📁 ЗАГРУЗИТЬ ЗВУК
-                <input type="file" id="audioUpload" accept="audio/*" style="display:none;" onchange="decodeFile(this)">
-            </label>
-        </div>
-        
-        <label>РЕЗУЛЬТАТ ДЕШИФРОВКИ:</label>
-        <textarea id="rawOutput" rows="2" readonly style="color: #fff;"></textarea>
-    </div>
+    <!-- FOOTER: SYSTEM LOGS -->
+    <footer class="c-l" id="con"></footer>
+</div>
 
 <script>
-    const abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя0123456789 .,!?-";
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    let countdown;
+/**
+ * BASTION CORE v23.5 - THE MONOLITH
+ * Full Signal Processing & Cryptography Logic
+ * Lines: 500+
+ */
 
-    function genKey() {
-        let newKey = "";
-        for(let i=0; i<10; i++) newKey += Math.floor(Math.random() * 10);
-        document.getElementById('passkey').value = newKey;
-        process();
+const ABC = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя .,!?-/+=:@#$%^&*()_[]{}<>";
+const ac = new (window.AudioContext || window.webkitAudioContext)();
+let ana, isL = false, lang = 'ru', rxSource = null;
+
+const dict = {
+    ru: {
+        m1: "ГЕОМЕТРИЯ_КЛЮЧА", m2: "ТРАНСЛЯЦИЯ", m3: "АНАЛИЗ_ЭФИРА",
+        lk: "КЛЮЧ (SEED):", lr: "СЛОЖНОСТЬ:", li: "ВВОД (RAW):", lo: "ШИФР (CIPHER):",
+        lc: "ПРИЕМ:", ls: "РЕЗУЛЬТАТ:", bg: "ГЕНЕРАЦИЯ", be: "ЭКСПОРТ",
+        bt: "В ЭФИР", bs: "В ФАЙЛ", bm: "СЛУШАТЬ", bf: "ОТКРЫТЬ", bc: "КОПИРОВАТЬ",
+        i: "СИСТЕМА BASTION v23.5 АКТИВИРОВАНА.", u: "ЯДРО: КЛЮЧИ ОБНОВЛЕНЫ.",
+        t: "TX: ГЕНЕРАЦИЯ СИГНАЛА...", r: "RX: ДЕКОДИРОВАНИЕ ЗАВЕРШЕНО."
+    },
+    en: {
+        m1: "KEY_GEOMETRY", m2: "TRANSMISSION", m3: "ETHER_ANALYSIS",
+        lk: "SEED_KEY:", lr: "DENSITY:", li: "DATA_IN:", lo: "CIPHER_OUT:",
+        lc: "RECEPTION:", ls: "RESULT:", bg: "GENERATE", be: "EXPORT",
+        bt: "BROADCAST", bs: "TO FILE", bm: "LISTEN", bf: "OPEN", bc: "COPY",
+        i: "BASTION v23.5 SYSTEM ARMED.", u: "CORE: SEED ROTATED.",
+        t: "TX: EMITTING PULSE...", r: "RX: DECODING FINISHED."
     }
+};
 
-    function generateTable(seed, ratio) {
-        let chars = abc.split('');
-        let s = parseInt(seed) || 0;
-        const random = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
-        let pool = [...chars];
-        for (let i = pool.length - 1; i > 0; i--) {
-            const j = Math.floor(random() * (i + 1));
-            [pool[i], pool[j]] = [pool[j], pool[i]];
-        }
-        let table = {}, revTable = {};
-        chars.forEach((char, i) => {
-            let replacement = "";
-            for(let r=0; r<ratio; r++) {
-                let idx = (i + r * 17) % pool.length; 
-                replacement += pool[idx];
-            }
-            table[char] = replacement;
-            revTable[replacement] = char;
+// --- SYSTEM UTILS ---
+const sys = {
+    log(m, s = false) {
+        const c = document.getElementById('con');
+        const t = new Date().toLocaleTimeString();
+        const tag = s ? `<span class="sys">[CORE]</span>` : `<span>[LOG]</span>`;
+        c.innerHTML += `<div class="l-r"><span class="l-t">${t}</span> <span class="l-m">${tag} ${m}</span></div>`;
+        c.scrollTop = c.scrollHeight;
+        if(c.childElementCount > 100) c.removeChild(c.firstChild);
+    },
+    toggleLang() {
+        lang = lang === 'ru' ? 'en' : 'ru';
+        document.querySelectorAll('[data-l]').forEach(e => { e.innerText = dict[lang][e.getAttribute('data-l')]; });
+        this.log("LANGUAGE_CHANGED", true);
+    },
+    newKey() {
+        const s = "0123456789ABCDEF-XYZ";
+        let k = "B-";
+        for(let i=0; i<12; i++) k += s[Math.floor(Math.random()*s.length)];
+        document.getElementById('k').value = k;
+        crypto.reinit();
+    },
+    saveImg() {
+        const l = document.createElement('a');
+        l.download = 'bastion_key.png';
+        l.href = document.getElementById('sC').toDataURL();
+        l.click();
+    },
+    copy() {
+        const el = document.getElementById('rawOut');
+        el.select();
+        document.execCommand('copy');
+        this.log("COPIED_TO_CLIPBOARD");
+    }
+};
+
+// --- VISUAL DSP ---
+const visual = {
+    nodes: [],
+    init(seed) {
+        const cv = document.getElementById('sC'), ctx = cv.getContext('2d');
+        const b = cv.parentElement;
+        cv.width = b.clientWidth; cv.height = b.clientHeight;
+        let s = [...seed].reduce((a,b)=>a+b.charCodeAt(0)*33, 0);
+        const r = () => { s = (s * 16807) % 2147483647; return s / 2147483647; };
+        this.nodes = [];
+        for(let i=0; i<60; i++) this.nodes.push({x: r()*cv.width, y: r()*cv.height, vx: (r()-0.5), vy: (r()-0.5)});
+        this.loop(cv, ctx, seed);
+    },
+    loop(cv, ctx, seed) {
+        const draw = () => {
+            if(document.getElementById('k').value !== seed) return;
+            ctx.fillStyle = 'rgba(2,2,2,0.15)'; ctx.fillRect(0,0,cv.width,cv.height);
+            this.nodes.forEach(n => {
+                n.x += n.vx; n.y += n.vy;
+                if(n.x<0||n.x>cv.width) n.vx*=-1;
+                if(n.y<0||n.y>cv.height) n.vy*=-1;
+                this.nodes.forEach(n2 => {
+                    let d = Math.hypot(n.x-n2.x, n.y-n2.y);
+                    if(d<120) {
+                        ctx.beginPath(); ctx.strokeStyle = `rgba(255,157,0,${(1-d/120)*0.4})`;
+                        ctx.lineWidth = 0.5; ctx.moveTo(n.x,n.y); ctx.lineTo(n2.x,n2.y); ctx.stroke();
+                    }
+                });
+                ctx.fillStyle = '#ff9d00'; ctx.fillRect(n.x-1,n.y-1,2,2);
+            });
+            requestAnimationFrame(draw);
+        };
+        draw();
+    }
+};
+
+// --- CRYPTO MODULE ---
+const crypto = {
+    eMap: {}, dMap: {}, r: 2,
+    reinit() {
+        const k = document.getElementById('k').value;
+        this.r = parseInt(document.getElementById('diff').value);
+        visual.init(k);
+        let s = [...k].reduce((a,b)=>a+b.charCodeAt(0)*13, 0);
+        const rnd = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+        let p = ABC.split('');
+        for(let i=p.length-1; i>0; i--) { const j = Math.floor(rnd() * (i+1)); [p[i], p[j]] = [p[j], p[i]]; }
+        this.eMap = {}; this.dMap = {};
+        ABC.split('').forEach((c, i) => {
+            let ch = ""; for(let j=0; j<this.r; j++) ch += p[(i + j * 17) % p.length];
+            this.eMap[c] = ch; this.dMap[ch] = c;
         });
-        return { table, revTable, ratio };
-    }
-
-    function process() {
-        const seed = document.getElementById('passkey').value;
-        const ratio = parseInt(document.getElementById('ratio').value);
-        const { table, revTable } = generateTable(seed, ratio);
-        const text = document.getElementById('rawInput').value;
-        document.getElementById('cipherOutput').value = text.split('').map(c => table[c] || c).join('');
-        const crypt = document.getElementById('cipherInput').value;
-        let decoded = "";
-        if (ratio === 1) { decoded = crypt.split('').map(c => revTable[c] || c).join(''); }
-        else {
-            for (let i = 0; i < crypt.length; i += ratio) {
-                let chunk = crypt.substr(i, ratio);
-                decoded += revTable[chunk] || (chunk.length === ratio ? "?" : chunk);
-            }
+        this.sync();
+        sys.log(dict[lang].u, true);
+    },
+    sync() {
+        const ri = document.getElementById('rawIn').value;
+        document.getElementById('cipOut').value = ri.split('').map(c => this.eMap[c] || c).join('');
+        const ci = document.getElementById('cipIn').value;
+        let res = "";
+        for(let i=0; i<ci.length; i+=this.r) {
+            let seg = ci.substr(i, this.r);
+            res += this.dMap[seg] || (seg.length === this.r ? "" : seg);
         }
-        document.getElementById('rawOutput').value = decoded;
-        if (crypt.length > 0) startTimer(); else stopTimer();
+        document.getElementById('rawOut').value = res;
     }
+};
 
-    function transmitAudio(isRecording) {
-        const text = document.getElementById('cipherOutput').value + " "; // ДОБАВИЛИ ПРОБЕЛ В КОНЕЦ
-        if (!text) return;
-        const dest = audioCtx.createMediaStreamDestination();
-        let recorder; let chunks = [];
-        
-        if (isRecording) {
-            recorder = new MediaRecorder(dest.stream);
-            recorder.ondataavailable = e => chunks.push(e.data);
-            recorder.onstop = () => {
-                const blob = new Blob(chunks, { type: 'audio/webm' });
-                document.getElementById('downloadLink').href = URL.createObjectURL(blob);
-                document.getElementById('downloadZone').style.display = 'block';
+// --- MODEM (DSP) ---
+const modem = {
+    tx(save) {
+        const d = document.getElementById('cipOut').value;
+        if(!d) return;
+        if(ac.state === 'suspended') ac.resume();
+        const dest = ac.createMediaStreamDestination();
+        let rec, chunks = [];
+        if(save) {
+            rec = new MediaRecorder(dest.stream);
+            rec.ondataavailable = e => chunks.push(e.data);
+            rec.onstop = () => {
+                const u = URL.createObjectURL(new Blob(chunks, {type:'audio/webm'}));
+                const a = document.getElementById('dlL'); a.href = u;
+                document.getElementById('dl').style.display = 'block'; a.click();
             };
-            recorder.start();
+            rec.start();
         }
-        
-        let time = audioCtx.currentTime + 0.3; 
-        const duration = 0.12; 
-        const step = 0.18; // УВЕЛИЧИЛИ ИНТЕРВАЛ МЕЖДУ СИМВОЛАМИ ДЛЯ НАДЕЖНОСТИ
-
-        text.split('').forEach(char => {
-            const index = abc.indexOf(char);
-            if (index === -1) return;
-            const freq = 600 + (index * 15);
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.frequency.value = freq;
-            gain.gain.setValueAtTime(0.1, time);
-            gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
-            osc.connect(gain); gain.connect(audioCtx.destination); gain.connect(dest);
-            osc.start(time); osc.stop(time + duration);
-            time += step;
+        ana = ac.createAnalyser();
+        let t = ac.currentTime + 0.5;
+        this.pulse(2500, t, 0.4, dest, save); t += 0.5; // Sync bit
+        d.split('').forEach(c => {
+            const f = 1100 + (ABC.indexOf(c) * 18);
+            this.pulse(f, t, 0.2, dest, save); t += 0.25;
         });
+        if(save) setTimeout(() => rec.stop(), (t - ac.currentTime + 0.5)*1000);
+        this.scope();
+        sys.log(dict[lang].t);
+        document.getElementById('tx-stat').innerText = "TRANSMITTING...";
+        setTimeout(() => document.getElementById('tx-stat').innerText = "IDLE", (t - ac.currentTime)*1000);
+    },
+    pulse(f, t, d, dest, s) {
+        const o = ac.createOscillator(), g = ac.createGain();
+        o.frequency.setValueAtTime(f, t);
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(0.4, t+0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t+d);
+        o.connect(g); g.connect(ana); g.connect(dest);
+        if(!s) g.connect(ac.destination);
+        o.start(t); o.stop(t+d);
+    },
+    toggleRx() {
+        const b = document.getElementById('listenBtn');
+        if(isL) { location.reload(); return; }
+        isL = true; b.innerText = "HALT_RX"; b.classList.add('b-a');
+        document.getElementById('rx-stat').innerText = "LISTENING";
+        sys.log("DSP_INIT: BANDPASS_FILTER_ON", true);
 
-        // УВЕЛИЧИЛИ ЗАПАС ЗАПИСИ ДО 1 СЕКУНДЫ
-        if (isRecording) {
-            setTimeout(() => recorder.stop(), (time - audioCtx.currentTime + 1.0) * 1000+1000);
-        }
-    }
-
-
-
-
-    // ДЕКОДИРОВАНИЕ ИЗ ФАЙЛА
-        // Улучшенное декодирование из файла v4.6
-    async function decodeFile(input) {
-        const file = input.files[0];
-        if (!file) return;
-        
-        document.getElementById('cipherInput').value = "УСИЛЕНИЕ СИГНАЛА...";
-        const arrayBuffer = await file.arrayBuffer();
-        const audioCtxTemp = new (window.AudioContext || window.webkitAudioContext)();
-        const audioBuffer = await audioCtxTemp.decodeAudioData(arrayBuffer);
-        const data = audioBuffer.getChannelData(0);
-        const sampleRate = audioBuffer.sampleRate;
-        
-        let result = "";
-        let lastFoundChar = "";
-        let silentStreak = 0;
-
-        // СКАНИРУЕМ ОЧЕНЬ ПЛОТНО (каждые 20мс)
-        const scanStep = Math.floor(sampleRate * 0.02); 
-        const windowSize = 2048;
-
-        for (let i = 0; i < data.length - windowSize; i += scanStep) {
-            const chunk = data.slice(i, i + windowSize);
+        navigator.mediaDevices.getUserMedia({audio: {echoCancellation: false, noiseSuppression: false}})
+        .then(st => {
+            rxSource = ac.createMediaStreamSource(st);
+            // Bandpass filter to clear noise
+            const filter = ac.createBiquadFilter();
+            filter.type = "bandpass"; filter.frequency.value = 2500; filter.Q.value = 1.0;
             
-            // ПРОГРАММНОЕ УСИЛЕНИЕ (Нормализация)
-            let maxAmp = 0;
-            for(let s=0; s<chunk.length; s++) if(Math.abs(chunk[s]) > maxAmp) maxAmp = Math.abs(chunk[s]);
+            ana = ac.createAnalyser(); ana.fftSize = 4096;
+            rxSource.connect(filter); filter.connect(ana);
+            this.scope();
             
-            // Если сигнал есть, даже очень слабый (0.005)
-            if (maxAmp > 0.005) { 
-                const freq = getPeakFrequency(chunk, sampleRate);
-                if (freq > 580) {
-                    const charIdx = Math.round((freq - 600) / 15);
-                    if (charIdx >= 0 && charIdx < abc.length) {
-                        const char = abc[charIdx];
-                        if (char !== lastFoundChar) {
-                            result += char;
-                            lastFoundChar = char;
-                            i += Math.floor(sampleRate * 0.1); // Пропуск тела символа
-                        }
-                        silentStreak = 0;
-                        continue;
+            const buf = new Float32Array(ana.frequencyBinCount);
+            let lastC = "", lastT = 0;
+            const rxLoop = () => {
+                if(!isL) return;
+                ana.getFloatFrequencyData(buf);
+                let mv = -Infinity, mi = -1;
+                for(let i=100; i<800; i++) { if(buf[i]>mv) { mv=buf[i]; mi=i; } }
+                const f = mi * ac.sampleRate / ana.fftSize;
+                document.getElementById('i-v').innerText = Math.round(mv) + "dB";
+                document.getElementById('i-f').innerText = Math.round(f) + "Hz";
+
+                if(mv > -50 && f > 1090) {
+                    const c = ABC[Math.round((f-1100)/18)];
+                    const now = Date.now();
+                    if(c && c !== lastC && (now - lastT > 180)) {
+                        document.getElementById('cipIn').value += c;
+                        lastC = c; lastT = now; crypto.sync();
                     }
                 }
-            }
-            
-            silentStreak++;
-            if (silentStreak > 3) lastFoundChar = ""; // Сброс для повторяющихся букв
-        }
-        
-        document.getElementById('cipherInput').value = result;
-        process();
-    }
-
-    // Функция точного поиска доминирующей частоты
-    function getPeakFrequency(data, sampleRate) {
-        let maxAmp = 0;
-        let bestFreq = 0;
-
-        // Ищем только в нашем диапазоне частот CICADA
-        for (let f = 590; f < 3000; f += 5) {
-            let r = 0, q = 0;
-            for (let n = 0; n < data.length; n++) {
-                const angle = (2 * Math.PI * f * n) / sampleRate;
-                r += data[n] * Math.cos(angle);
-                q += data[n] * Math.sin(angle);
-            }
-            const amp = r * r + q * q;
-            if (amp > maxAmp) {
-                maxAmp = amp;
-                bestFreq = f;
-            }
-        }
-        return bestFreq;
-    }
-
-    function detectFreq(buffer, sampleRate) {
-        let maxVal = -Infinity; let maxIdx = -1;
-        const fftSize = 2048;
-        // Упрощенный поиск пика для файла
-        const spectrum = new Float32Array(fftSize/2);
-        for(let i=0; i<fftSize; i++) spectrum[i] = buffer[i] || 0; 
-        // Здесь используется упрощенная логика детекции частоты
-        let bestFreq = 0; let bestAmp = 0;
-        for (let f = 600; f < 3000; f += 5) {
-            let amp = 0;
-            for (let i = 0; i < 200; i++) amp += Math.abs(buffer[i] * Math.sin(2 * Math.PI * f * i / sampleRate));
-            if (amp > bestAmp) { bestAmp = amp; bestFreq = f; }
-        }
-        return bestAmp > 0.5 ? bestFreq : 0;
-    }
-
-    let isListening = false;
-    function listenAudio() {
-        if (isListening) { location.reload(); return; }
-        isListening = true;
-        document.getElementById('listenBtn').innerText = "⏹ СТОП";
-        navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-            const source = audioCtx.createMediaStreamSource(stream);
-            const analyser = audioCtx.createAnalyser();
-            analyser.fftSize = 2048; source.connect(analyser);
-            const buffer = new Float32Array(analyser.frequencyBinCount);
-            function detect() {
-                analyser.getFloatFrequencyData(buffer);
-                let maxVal = -Infinity; let maxIdx = -1;
-                for (let i = 0; i < buffer.length; i++) { if (buffer[i] > maxVal) { maxVal = buffer[i]; maxIdx = i; } }
-                const freq = maxIdx * audioCtx.sampleRate / analyser.fftSize;
-                if (maxVal > -45 && freq > 580) {
-                    const charIdx = Math.round((freq - 600) / 15);
-                    if (charIdx >= 0 && charIdx < abc.length) {
-                        const char = abc[charIdx];
-                        const input = document.getElementById('cipherInput');
-                        if (input.value.slice(-1) !== char) { input.value += char; process(); }
-                    }
-                }
-                if (isListening) requestAnimationFrame(detect);
-            }
-            detect();
+                requestAnimationFrame(rxLoop);
+            };
+            rxLoop();
         });
+    },
+    scope() {
+        const cv = document.getElementById('sc'), ctx = cv.getContext('2d');
+        const buf = new Uint8Array(ana.frequencyBinCount);
+        const draw = () => {
+            if(!ana) return;
+            ana.getByteTimeDomainData(buf);
+            ctx.fillStyle = '#000'; ctx.fillRect(0,0,cv.width,cv.height);
+            ctx.strokeStyle = '#111'; ctx.lineWidth = 1;
+            for(let i=0; i<cv.width; i+=40) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,cv.height); ctx.stroke(); }
+            ctx.strokeStyle = '#ff9d00'; ctx.lineWidth = 2; ctx.beginPath();
+            let sw = cv.width / buf.length, x = 0;
+            for(let i=0; i<buf.length; i++) {
+                let v = buf[i]/128.0, y = v * (cv.height/2);
+                i === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y); x += sw;
+            }
+            ctx.stroke();
+            if(isL || ac.state === 'running') requestAnimationFrame(draw);
+        };
+        draw();
+    },
+    async decodeFile(input) {
+        if(!input.files.length) return;
+        sys.log("DSP_SCAN: ANALYZING_BUFFER...");
+        const ab = await input.files[0].arrayBuffer();
+        try {
+            const buffer = await ac.decodeAudioData(ab);
+            const raw = buffer.getChannelData(0), sr = buffer.sampleRate;
+            let res = "", step = Math.floor(0.25 * sr);
+            for(let i=0; i < raw.length - 2048; i += step) {
+                let bestF = 0, bestA = 0;
+                for(let f = 1090; f < 4000; f += 18) {
+                    let re = 0, im = 0;
+                    for(let n=0; n<512; n++) {
+                        let a = 2*Math.PI*f*n/sr;
+                        re += raw[i+n] * Math.cos(a); im += raw[i+n] * Math.sin(a);
+                    }
+                    let amp = re*re + im*im;
+                    if(amp > bestA) { bestA = amp; bestF = f; }
+                }
+                if(bestA > 0.002) res += ABC[Math.round((bestF - 1100)/18)] || "";
+            }
+            document.getElementById('cipIn').value = res; crypto.sync();
+            sys.log(dict[lang].r, true);
+        } catch(e) { sys.log("DECODE_ERROR: INVALID_PACKET", true); }
     }
+};
 
-    function startTimer() {
-        const timerDisplay = document.getElementById('timer');
-        let timeLeft = 30; clearInterval(countdown);
-        countdown = setInterval(() => {
-            timeLeft--; timerDisplay.innerText = `САМОУНИЧТОЖЕНИЕ: ${timeLeft}s`;
-            if (timeLeft <= 0) { clearInterval(countdown); document.getElementById('rawOutput').value = "ДАННЫЕ СТЕРТЫ"; }
-        }, 1000);
-    }
-    function stopTimer() { clearInterval(countdown); document.getElementById('timer').innerText = ""; }
-
-    document.getElementById('passkey').oninput = process;
-    document.getElementById('rawInput').oninput = process;
-    document.getElementById('cipherInput').oninput = process;
+// --- INITIALIZE ---
+setInterval(() => { document.getElementById('clk').innerText = new Date().toLocaleTimeString(); }, 1000);
+window.onload = () => { crypto.reinit(); sys.log(dict[lang].i, true); };
 </script>
 </body>
 </html>
